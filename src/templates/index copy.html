@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(to right, #667eea, #764ba2);
+            color: #fff;
+            font-family: 'Arial', sans-serif;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .chat {
+            max-width: 100%;
+        }
+        .card {
+            background-color: #1e1e2f;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        .card-header {
+            background-color: #2c2c44;
+            border-bottom: 1px solid #4d4d6a;
+            border-radius: 15px 15px 0 0;
+        }
+        .user_info span {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .user_info p {
+            margin: 0;
+            font-size: 14px;
+            color: #a5a5bf;
+        }
+        .msg_card_body {
+            overflow-y: auto;
+            height: 400px;
+            background-color: #1e1e2f;
+            padding: 15px;
+        }
+        .msg_cotainer {
+            background-color: #4d4d6a;
+            color: #fff;
+            border-radius: 10px;
+            padding: 10px 15px;
+            max-width: 70%;
+            font-size: 18px;
+        }
+        .msg_cotainer_send {
+            background-color: #667eea;
+            color: #fff;
+            border-radius: 10px;
+            padding: 10px 15px;
+            max-width: 70%;
+            font-size: 18px;
+        }
+        .msg_time, .msg_time_send {
+            font-size: 12px; /* Make the timestamp smaller */
+            color: #c4c4c4;
+            margin-top: 5px;
+            display: inline-block; /* Position it beside the message */
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+        .send_btn {
+            background-color: #667eea;
+            border: none;
+            color: #fff;
+            border-radius: 5px;
+        }
+        .send_btn:hover {
+            background-color: #5b67d3;
+        }
+        .type_msg {
+            background-color: #2c2c44;
+            border: none;
+            border-radius: 5px;
+            color: #c8a0a0;
+        }
+        .type_msg:focus {
+            background-color: #9d9dbd;
+            outline: none;
+            box-shadow: none;
+        }
+        .img_cont {
+            position: relative;
+        }
+        .online_icon {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background: #4cd137;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            bottom: 0px;
+            right: 0px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid h-100">
+        <div class="row justify-content-center align-items-center h-100">
+            <div class="col-md-8 col-xl-6 chat">
+                <div class="card">
+                    <div class="card-header msg_head">
+                        <div class="d-flex bd-highlight">
+                            <div class="img_cont">
+                                <img src="https://cdn-icons-png.flaticon.com/512/387/387569.png" class="rounded-circle user_img" alt="Chatbot">
+                                <span class="online_icon"></span>
+                            </div>
+                            <div class="user_info">
+                                <span>Medical Chatbot</span>
+                                <p>Ask me anything!</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="messageFormeight" class="card-body msg_card_body"></div>
+                    <div class="card-footer">
+                        <form id="messageArea" class="input-group">
+                            <input type="text" id="text" name="msg" placeholder="Type your message..." autocomplete="off" class="form-control type_msg" required />
+                            <div class="input-group-append">
+                                <button type="submit" id="send" class="input-group-text send_btn"><i class="fas fa-location-arrow"></i></button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $("#messageArea").on("submit", function(event) {
+                const date = new Date();
+                const str_time = `${date.getHours()}:${date.getMinutes().toString().padStart(2, "0")}`;
+                const rawText = $("#text").val();
+
+                const userHtml = `
+                    <div class="d-flex justify-content-end mb-4">
+                        <div class="msg_cotainer_send">${rawText}
+                            <span class="msg_time_send"><i class="fas fa-clock"></i> ${str_time}</span>
+                        </div>
+                        <div class="img_cont_msg">
+                            <img src="https://i.ibb.co/d5b84Xw/Untitled-design.png" class="rounded-circle user_img_msg" alt="User">
+                        </div>
+                    </div>`;
+                $("#messageFormeight").append(userHtml);
+                $("#text").val("");
+
+                $.ajax({
+                    data: { msg: rawText },
+                    type: "POST",
+                    url: "/get",
+                }).done(function(data) {
+                    const botHtml = `
+                        <div class="d-flex justify-content-start mb-4">
+                            <div class="img_cont_msg">
+                                <img src="https://cdn-icons-png.flaticon.com/512/387/387569.png" class="rounded-circle user_img_msg" alt="Bot">
+                            </div>
+                            <div class="msg_cotainer">${data}
+                                <span class="msg_time"><i class="fas fa-clock"></i> ${str_time}</span>
+                            </div>
+                        </div>`;
+                    $("#messageFormeight").append(botHtml);
+                });
+
+                event.preventDefault();
+            });
+        });
+    </script>
+</body>
+</html>
